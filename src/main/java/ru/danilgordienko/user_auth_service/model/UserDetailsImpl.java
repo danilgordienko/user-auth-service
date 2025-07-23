@@ -17,6 +17,7 @@ public class UserDetailsImpl implements UserDetails {
     private Long id;
     private String login;
     private String password;
+    private String email;
     private Set<String> roles;
 
 
@@ -25,6 +26,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getId(),
                 user.getLogin(),
                 user.getPassword(),
+                user.getEmail(),
                 user.getRoles());
     }
 

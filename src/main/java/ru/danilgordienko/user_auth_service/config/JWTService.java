@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ru.danilgordienko.user_auth_service.model.UserDetailsImpl;
 
 import java.security.Key;
 import java.util.Date;
@@ -29,39 +30,46 @@ public class JWTService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // генерирует access токен
     public String generateAccessToken(UserDetails userDetails) {
         return buildToken(userDetails,  accessExpiration);
     }
 
+    // генерирует refresh toker
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(userDetails,  refreshExpiration);
     }
 
-    /**
-     * Генерирует JWT-токен для аутентифицированного пользователя
-     */
+     // Генерирует JWT-токен для аутентифицированного пользователя
     private String buildToken(UserDetails userDetails, int expiration) {
+        UserDetailsImpl user = (UserDetailsImpl) userDetails;
+
         return Jwts.builder()
-                .setSubject(userDetails.getUsername()) // Устанавливаем имя пользователя в токен
-                .setIssuedAt(new Date()) // Устанавливаем дату создания токена
-                .claim("roles", userDetails.getAuthorities().stream()
+                .setSubject(user.getUsername()) // login
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .claim("id", user.getId())
+                .claim("email", user.getEmail())
+                .claim("roles", user.getAuthorities().stream()
                         .map(Object::toString)
                         .toList())
-                .setExpiration(new Date(new Date().getTime() + expiration)) // Устанавливаем дату истечения
-                .signWith(getSigningKey()) // Подписываем токен секретным ключом
+                .signWith(getSigningKey())
                 .compact();
     }
 
+
+    // проверка просрочен ли токен
     public boolean isTokenExpired(String token) {
         return getExpirationFromToken(token).before(new Date());
     }
 
+    // получение ролей из токена
     public List<String> getRolesFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.get("roles", List.class);
     }
 
-
+    // получение времени просрочки токена
     private Date getExpirationFromToken(String token) {
         return getClaimsFromToken(token).getExpiration();
     }
@@ -74,9 +82,7 @@ public class JWTService {
                 .getBody();
     }
 
-    /**
-     * Извлекает имя пользователя из переданного JWT-токена
-     */
+    // Извлекает логин из переданного JWT-токена
     public String getLoginFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }

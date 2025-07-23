@@ -15,4 +15,6 @@ public interface AuthService {
     public AuthResponse register(RegisterRequest registerRequest);
     public void refresh(HttpServletRequest request, HttpServletResponse response) throws IOException;
     public void logout(HttpServletRequest request);
+    public void addAdminRole(String login);
+    public void assignPremiumRole(String login);
 }
