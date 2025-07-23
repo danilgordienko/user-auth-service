@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  user-auth-service:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SOURCE: ${DB_SOURCE}
+
+      APP_SECURITY_SECRET: ${APP_SECURITY_SECRET}
+      APP_SECURITY_REFRESH_EXPIRATION: ${APP_SECURITY_REFRESH_EXPIRATION}
+      APP_SECURITY_ACCESS_EXPIRATION: ${APP_SECURITY_ACCESS_EXPIRATION}
+    restart: always
+
+volumes:
+  pgdata:
